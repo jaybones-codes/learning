@@ -1,3 +1,4 @@
+#include "Input.h"
 #include "TimeManager.h"
 #include <SDL3/SDL.h>
 #include <iostream>
@@ -28,15 +29,19 @@ int main() {
   std::cout << "Entering game loop..." << std::endl;
 
   TimeManager time;
+  Input input;
   // Game Loop
 
   while (isRunning) {
+    input.update();
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
+      input.processEvent(event);
       if (event.type == SDL_EVENT_QUIT) {
         isRunning = false;
       }
     }
+
     time.updateDeltaTime(); // Actual Loop
     // std::cout << "Delta Time " << time.getDeltaTime() << std::endl;//debug
     // shit
@@ -44,8 +49,8 @@ int main() {
     // Clear screen and present
     SDL_RenderClear(renderer);
     SDL_RenderPresent(renderer);
-  }
-  // Clean Up
+
+  } // Clean Up
   SDL_DestroyRenderer(renderer);
   SDL_DestroyWindow(window);
   SDL_Quit();

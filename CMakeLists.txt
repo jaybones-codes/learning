@@ -7,6 +7,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(SOURCES
     src/main.cpp
     src/TimeManager.cpp
+    src/Input.cpp
 )
 
 # Create executable
