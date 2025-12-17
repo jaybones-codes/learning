@@ -36,6 +36,7 @@ void Input::processEvent(const SDL_Event &event) {
     break;
 
   case SDL_EVENT_MOUSE_BUTTON_DOWN: {
+    std::cout << "BUTTON DOWN DETECTED!" << std::endl; // ADD THIS
     int index = event.button.button - 1;
     if (index >= 0 && index < 5) {
       m_mouseButtons[index] = ButtonState::Pressed;
@@ -83,27 +84,29 @@ bool Input::isKeyReleased(SDL_Scancode key) const {
   return false;
 }
 bool Input::isMouseButtonDown(int button) const {
-
-  if (button < 0 || button >= 5) {
+  int index = button - 1;
+  if (index < 0 || index >= 5) {
     return false;
   }
-  if (m_mouseButtons[button] == ButtonState::Down ||
-      m_mouseButtons[button] == ButtonState::Pressed) {
+  if (m_mouseButtons[index] == ButtonState::Down ||
+      m_mouseButtons[index] == ButtonState::Pressed) {
     return true;
   }
   return false;
 }
 
 bool Input::isMouseButtonPressed(int button) const {
-  if (button < 0 || button >= 5)
+  int index = button - 1; // Convert SDL constant to index
+  if (index < 0 || index >= 5)
     return false;
-  return m_mouseButtons[button] == ButtonState::Pressed;
+  return m_mouseButtons[index] == ButtonState::Pressed;
 }
 
 bool Input::isMouseButtonReleased(int button) const {
-  if (button < 0 || button >= 5)
+  int index = button - 1;
+  if (index < 0 || index >= 5)
     return false;
-  return m_mouseButtons[button] == ButtonState::Released;
+  return m_mouseButtons[index] == ButtonState::Released;
 }
 
 ButtonState Input::getKeyState(SDL_Scancode key) const {

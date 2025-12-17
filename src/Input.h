@@ -37,6 +37,12 @@ public:
   // Utility functions
   float getAxis(SDL_Scancode negative, SDL_Scancode positive) const;
 
+  // Helper to get/set button state
+  ButtonState getKeyState(SDL_Scancode key) const;
+  void setKeyState(SDL_Scancode key, ButtonState state);
+  float getMouseX() { return m_mouseX; }
+  float getMouseY() { return m_mouseY; }
+
 private:
   // Keyboard state
   std::unordered_map<SDL_Scancode, ButtonState> m_keyStates;
@@ -45,8 +51,4 @@ private:
   std::array<ButtonState, 5> m_mouseButtons = {ButtonState::Up};
   int m_mouseX = 0;
   int m_mouseY = 0;
-
-  // Helper to get/set button state
-  ButtonState getKeyState(SDL_Scancode key) const;
-  void setKeyState(SDL_Scancode key, ButtonState state);
 };

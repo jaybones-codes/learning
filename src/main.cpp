@@ -1,6 +1,9 @@
 #include "Input.h"
 #include "TimeManager.h"
 #include <SDL3/SDL.h>
+#include <SDL3/SDL_keycode.h>
+#include <SDL3/SDL_rect.h>
+#include <SDL3/SDL_render.h>
 #include <iostream>
 
 int main() {
@@ -27,13 +30,16 @@ int main() {
   }
   std::cout << "Window created successfully" << std::endl;
   std::cout << "Entering game loop..." << std::endl;
-
   TimeManager time;
   Input input;
   // Game Loop
-
+  float rectW = 50;
+  float rectH = 50;
+  float rectX = 100.0f;
+  float rectY = 100.0f;
+  float speed = 200.0f; // pixels per second
   while (isRunning) {
-    input.update();
+
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
       input.processEvent(event);
@@ -41,13 +47,39 @@ int main() {
         isRunning = false;
       }
     }
-
     time.updateDeltaTime(); // Actual Loop
-    // std::cout << "Delta Time " << time.getDeltaTime() << std::endl;//debug
-    // shit
+    float dt = time.getDeltaTime();
+    if (input.isKeyDown(SDL_SCANCODE_S)) {
 
-    // Clear screen and present
+      rectY += speed * dt;
+    }
+    if (input.isKeyDown(SDL_SCANCODE_W)) {
+
+      rectY -= speed * dt;
+    }
+    if (input.isKeyDown(SDL_SCANCODE_A)) {
+
+      rectX -= speed * dt;
+    }
+    if (input.isKeyDown(SDL_SCANCODE_D)) {
+
+      rectX += speed * dt;
+    }
+    if (input.isMouseButtonPressed(SDL_BUTTON_LEFT)) {
+      std::cout << "Mouse clicked!" << std::endl;
+      rectX = input.getMouseX();
+      rectY = input.getMouseY();
+      std::cout << "Target: " << rectX << ", " << rectY << std::endl;
+    } // Clear screen and present
+    input.update();
+
+    SDL_SetRenderDrawColor(renderer, 135, 206, 235, 255);
     SDL_RenderClear(renderer);
+    SDL_FRect rect = {rectX, rectY, rectW, rectH};
+    SDL_SetRenderDrawColor(renderer, 55, 66, 11, 255);
+
+    SDL_RenderFillRect(renderer, &rect);
+
     SDL_RenderPresent(renderer);
 
   } // Clean Up
