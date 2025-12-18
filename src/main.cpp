@@ -1,4 +1,5 @@
 #include "Input.h"
+#include "TileGrid.h"
 #include "TimeManager.h"
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_keycode.h>
@@ -32,6 +33,7 @@ int main() {
   std::cout << "Entering game loop..." << std::endl;
   TimeManager time;
   Input input;
+  TileGrid tg;
   // Game Loop
   float rectW = 50;
   float rectH = 50;
@@ -39,7 +41,7 @@ int main() {
   float rectY = 100.0f;
   float speed = 200.0f; // pixels per second
   while (isRunning) {
-
+    tg.setTileType(5, 5, TileType::Floor);
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
       input.processEvent(event);

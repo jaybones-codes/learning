@@ -8,6 +8,7 @@ set(SOURCES
     src/main.cpp
     src/TimeManager.cpp
     src/Input.cpp
+    src/TileGrid.cpp
 )
 
 # Create executable
