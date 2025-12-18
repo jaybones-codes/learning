@@ -40,8 +40,13 @@ int main() {
   float rectX = 100.0f;
   float rectY = 100.0f;
   float speed = 200.0f; // pixels per second
+  tg.setTileType(5, 5, TileType::Floor);
+  std::cout << "Tile Type: " << tg.tileTypeToString(tg.getTileType(5, 5))
+            << std::endl;
+  tg.setTileType(0, 0, TileType::Wall);
+  std::cout << "Tile Type: " << tg.tileTypeToString(tg.getTileType(0, 0))
+            << std::endl;
   while (isRunning) {
-    tg.setTileType(5, 5, TileType::Floor);
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
       input.processEvent(event);
@@ -81,7 +86,7 @@ int main() {
     SDL_SetRenderDrawColor(renderer, 55, 66, 11, 255);
 
     SDL_RenderFillRect(renderer, &rect);
-
+    tg.renderTileGrid(renderer);
     SDL_RenderPresent(renderer);
 
   } // Clean Up
