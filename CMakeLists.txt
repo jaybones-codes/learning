@@ -9,7 +9,9 @@ set(SOURCES
     src/TimeManager.cpp
     src/Input.cpp
     src/TileGrid.cpp
+    src/Camera.cpp
 )
+
 
 # Create executable
 add_executable(proto-engine ${SOURCES})

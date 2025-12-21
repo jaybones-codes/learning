@@ -1,82 +1,117 @@
 #include "TileGrid.h"
-#include <SDL3/SDL_render.h>
 #include <iostream>
+
 TileGrid::TileGrid() { generateGrid(); }
+
 void TileGrid::generateGrid() {
-  m_grid.resize(GRID_HEIGHT);
-  for (std::vector<TileType> &row : m_grid) {
-    row.resize(GRID_WIDTH, TileType::Empty);
-  }
-};
-void TileGrid::setTileType(int y, int x, TileType type) {
-  if (checkBounds(x, y)) {
-    m_grid[y][x] = type;
-  } else {
-    std::cout << "Tile Out of bounds" << std::endl;
-  }
-};
+  m_grid = std::vector<std::vector<TileType>>(
+      GRID_HEIGHT, std::vector<TileType>(GRID_WIDTH, TileType::Floor));
+}
+
 bool TileGrid::checkBounds(int x, int y) {
   return x >= 0 && x < GRID_WIDTH && y >= 0 && y < GRID_HEIGHT;
 }
-std::string TileGrid::tileTypeToString(TileType type) {
-  switch (type) {
-  case TileType::Empty:
-    return "Empty";
-  case TileType::Grass:
-    return "Grass";
-  case TileType::Wall:
-    return "Wall";
-  case TileType::Floor:
-    return "Floor";
-  case TileType::Water:
-    return "Water";
-  default:
-    return "Unknown";
+
+void TileGrid::setTileType(int x, int y, TileType type) {
+  if (checkBounds(x, y)) {
+    m_grid[y][x] = type;
   }
 }
+
+TileType TileGrid::getTileType(int x, int y) {
+  if (checkBounds(x, y)) {
+    return m_grid[y][x];
+  }
+  return TileType::Empty;
+}
+
 void TileGrid::setTileColor(SDL_Renderer *renderer, TileType type) {
   switch (type) {
-  case TileType::Empty:
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-    break;
-  case TileType::Grass:
-    SDL_SetRenderDrawColor(renderer, 0, 128, 0, 255);
+  case TileType::Floor:
+    SDL_SetRenderDrawColor(renderer, 180, 180, 180, 255);
     break;
   case TileType::Wall:
-    SDL_SetRenderDrawColor(renderer, 128, 128, 128, 255);
-    break;
-  case TileType::Floor:
-    SDL_SetRenderDrawColor(renderer, 138, 69, 19, 255);
+    SDL_SetRenderDrawColor(renderer, 60, 60, 60, 255);
     break;
   case TileType::Water:
-    SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
+    SDL_SetRenderDrawColor(renderer, 50, 120, 200, 255);
     break;
-  default:
-    TileType::Empty;
-    break; // SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+  case TileType::Grass:
+    SDL_SetRenderDrawColor(renderer, 80, 160, 60, 255);
+    break;
+  case TileType::Empty:
+    SDL_SetRenderDrawColor(renderer, 20, 20, 20, 255);
+    break;
   }
 }
-void TileGrid::renderTileGrid(SDL_Renderer *renderer) { // No grid parameter!
-  for (int y = 0; y < GRID_HEIGHT; y++) {               // Fixed bounds
-    for (int x = 0; x < GRID_WIDTH; x++) {              // Fixed bounds
-      TileType type = getTileType(x, y); // No grid->, just call directly
-      setTileColor(renderer, type);      // No grid->
 
-      int screenX = x * TILE_SIZE;
-      int screenY = y * TILE_SIZE;
+void TileGrid::renderTileGrid(SDL_Renderer *renderer, float cameraX,
+                              float cameraY) {
+  for (int y = 0; y < GRID_HEIGHT; y++) {
+    for (int x = 0; x < GRID_WIDTH; x++) {
+      TileType tile = m_grid[y][x];
 
-      SDL_FRect frect = {
-          static_cast<float>(screenX), static_cast<float>(screenY),
-          static_cast<float>(TILE_SIZE), static_cast<float>(TILE_SIZE)};
-      SDL_RenderFillRects(renderer, &frect, 1);
+      float worldX = x * TILE_SIZE;
+      float worldY = y * TILE_SIZE;
+      float screenX = worldX - cameraX;
+      float screenY = worldY - cameraY;
+
+      setTileColor(renderer, tile);
+
+      SDL_FRect rect = {screenX, screenY, (float)TILE_SIZE, (float)TILE_SIZE};
+      SDL_RenderFillRect(renderer, &rect);
     }
   }
 }
 
-// Green : rgba(0, 128, 0, 255)
+void TileGrid::renderLineGrid(SDL_Renderer *renderer, float cameraX,
+                              float cameraY) {
+  SDL_SetRenderDrawColor(renderer, 40, 40, 40, 255);
 
-//           Blue : rgba(0, 0, 255, 255)
+  for (int y = 0; y <= GRID_HEIGHT; y++) {
+    float lineY = y * TILE_SIZE - cameraY;
+    SDL_RenderLine(renderer, -cameraX, lineY, GRID_WIDTH * TILE_SIZE - cameraX,
+                   lineY);
+  }
 
-//                     Brown : rgba(139, 69, 19, 255)
+  for (int x = 0; x <= GRID_WIDTH; x++) {
+    float lineX = x * TILE_SIZE - cameraX;
+    SDL_RenderLine(renderer, lineX, -cameraY, lineX,
+                   GRID_HEIGHT * TILE_SIZE - cameraY);
+  }
+}
 
-//                                  Grey : rgba(128, 128, 128, 255)
+void TileGrid::tileHighlight(SDL_Renderer *renderer, int mouseX, int mouseY) {
+  int tileX = mouseX / TILE_SIZE;
+  int tileY = mouseY / TILE_SIZE;
+
+  if (checkBounds(tileX, tileY)) {
+    hoveredTileX = tileX;
+    hoveredTileY = tileY;
+  } else {
+    hoveredTileX = -1;
+    hoveredTileY = -1;
+  }
+
+  if (hoveredTileX >= 0 && hoveredTileY >= 0) {
+    SDL_FRect rect = {(float)(hoveredTileX * TILE_SIZE),
+                      (float)(hoveredTileY * TILE_SIZE), (float)TILE_SIZE,
+                      (float)TILE_SIZE};
+    SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);
+    SDL_RenderRect(renderer, &rect);
+  }
+}
+
+void TileGrid::renderBrushIndicator(SDL_Renderer *renderer) {
+  setTileColor(renderer, currentBrush);
+  SDL_FRect rect = {10, 10, 40, 40};
+  SDL_RenderFillRect(renderer, &rect);
+
+  SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+  SDL_FRect outline = {10, 10, 40, 40};
+  SDL_RenderRect(renderer, &outline);
+}
+
+void TileGrid::setCurrentBrush(TileType type) { currentBrush = type; }
+
+TileType TileGrid::getCurrentBrush() const { return currentBrush; }

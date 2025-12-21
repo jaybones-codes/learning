@@ -1,51 +1,35 @@
+#include "Camera.h"
 #include "Input.h"
 #include "TileGrid.h"
 #include "TimeManager.h"
 #include <SDL3/SDL.h>
-#include <SDL3/SDL_keycode.h>
-#include <SDL3/SDL_rect.h>
-#include <SDL3/SDL_render.h>
 #include <iostream>
 
 int main() {
-  bool isRunning = true;
-
   if (!SDL_Init(SDL_INIT_VIDEO)) {
-
     std::cerr << "SDL_Init failed: " << SDL_GetError() << std::endl;
     return 1;
   }
 
-  std::cout << "SDL initialized successfully" << std::endl;
-
   SDL_Window *window = SDL_CreateWindow("Proto-Engine", 800, 600, 0);
-  if (window == nullptr) {
-    std::cerr << "Error: Failed to create Window: " << SDL_GetError()
-              << std::endl;
+  if (!window) {
+    std::cerr << "Window creation failed: " << SDL_GetError() << std::endl;
     return 1;
   }
 
   SDL_Renderer *renderer = SDL_CreateRenderer(window, nullptr);
-  if (renderer == nullptr) {
+  if (!renderer) {
     std::cerr << "Renderer creation failed: " << SDL_GetError() << std::endl;
+    return 1;
   }
-  std::cout << "Window created successfully" << std::endl;
-  std::cout << "Entering game loop..." << std::endl;
+
+  bool isRunning = true;
   TimeManager time;
   Input input;
   TileGrid tg;
-  // Game Loop
-  float rectW = 50;
-  float rectH = 50;
-  float rectX = 100.0f;
-  float rectY = 100.0f;
-  float speed = 200.0f; // pixels per second
-  tg.setTileType(5, 5, TileType::Floor);
-  std::cout << "Tile Type: " << tg.tileTypeToString(tg.getTileType(5, 5))
-            << std::endl;
-  tg.setTileType(0, 0, TileType::Wall);
-  std::cout << "Tile Type: " << tg.tileTypeToString(tg.getTileType(0, 0))
-            << std::endl;
+  Camera camera(800, 600, tg.GRID_WIDTH * tg.TILE_SIZE,
+                tg.GRID_HEIGHT * tg.TILE_SIZE);
+
   while (isRunning) {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
@@ -54,45 +38,51 @@ int main() {
         isRunning = false;
       }
     }
-    time.updateDeltaTime(); // Actual Loop
+
+    time.updateDeltaTime();
     float dt = time.getDeltaTime();
-    if (input.isKeyDown(SDL_SCANCODE_S)) {
 
-      rectY += speed * dt;
-    }
-    if (input.isKeyDown(SDL_SCANCODE_W)) {
+    camera.update(dt, input);
 
-      rectY -= speed * dt;
-    }
-    if (input.isKeyDown(SDL_SCANCODE_A)) {
+    // Handle brush switching
+    if (input.isKeyPressed(SDL_SCANCODE_1))
+      tg.setCurrentBrush(TileType::Floor);
+    if (input.isKeyPressed(SDL_SCANCODE_2))
+      tg.setCurrentBrush(TileType::Wall);
+    if (input.isKeyPressed(SDL_SCANCODE_3))
+      tg.setCurrentBrush(TileType::Water);
+    if (input.isKeyPressed(SDL_SCANCODE_4))
+      tg.setCurrentBrush(TileType::Grass);
 
-      rectX -= speed * dt;
+    // Handle painting with camera offset
+    if (input.isMouseButtonDown(0)) {
+      int worldX = input.getMouseX() + (int)camera.getX();
+      int worldY = input.getMouseY() + (int)camera.getY();
+      int gridX = worldX / tg.TILE_SIZE;
+      int gridY = worldY / tg.TILE_SIZE;
+      tg.setTileType(gridX, gridY, tg.getCurrentBrush());
     }
-    if (input.isKeyDown(SDL_SCANCODE_D)) {
 
-      rectX += speed * dt;
-    }
-    if (input.isMouseButtonPressed(SDL_BUTTON_LEFT)) {
-      std::cout << "Mouse clicked!" << std::endl;
-      rectX = input.getMouseX();
-      rectY = input.getMouseY();
-      std::cout << "Target: " << rectX << ", " << rectY << std::endl;
-    } // Clear screen and present
     input.update();
 
     SDL_SetRenderDrawColor(renderer, 135, 206, 235, 255);
     SDL_RenderClear(renderer);
-    SDL_FRect rect = {rectX, rectY, rectW, rectH};
-    SDL_SetRenderDrawColor(renderer, 55, 66, 11, 255);
 
-    SDL_RenderFillRect(renderer, &rect);
-    tg.renderTileGrid(renderer);
+    tg.renderTileGrid(renderer, camera.getX(), camera.getY());
+    tg.renderLineGrid(renderer, camera.getX(), camera.getY());
+
+    int worldMouseX = input.getMouseX() + (int)camera.getX();
+    int worldMouseY = input.getMouseY() + (int)camera.getY();
+    tg.tileHighlight(renderer, worldMouseX, worldMouseY);
+
+    tg.renderBrushIndicator(renderer);
+
     SDL_RenderPresent(renderer);
+  }
 
-  } // Clean Up
   SDL_DestroyRenderer(renderer);
   SDL_DestroyWindow(window);
   SDL_Quit();
-  std::cout << "Engine shutdown";
+
   return 0;
 }
