@@ -22,7 +22,8 @@ public:
   void renderLineGrid(SDL_Renderer *renderer, float cameraX, float cameraY);
   void setTileType(int x, int y, TileType type);
   TileType getTileType(int x, int y);
-  void tileHighlight(SDL_Renderer *renderer, int mouseX, int mouseY);
+  void tileHighlight(SDL_Renderer *renderer, int mouseX, int mouseY,
+                     float cameraX, float cameraY);
   void setTileColor(SDL_Renderer *renderer, TileType type);
   void renderBrushIndicator(SDL_Renderer *renderer);
   void setCurrentBrush(TileType type);

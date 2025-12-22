@@ -81,7 +81,8 @@ void TileGrid::renderLineGrid(SDL_Renderer *renderer, float cameraX,
   }
 }
 
-void TileGrid::tileHighlight(SDL_Renderer *renderer, int mouseX, int mouseY) {
+void TileGrid::tileHighlight(SDL_Renderer *renderer, int mouseX, int mouseY,
+                             float cameraX, float cameraY) {
   int tileX = mouseX / TILE_SIZE;
   int tileY = mouseY / TILE_SIZE;
 
@@ -94,14 +95,16 @@ void TileGrid::tileHighlight(SDL_Renderer *renderer, int mouseX, int mouseY) {
   }
 
   if (hoveredTileX >= 0 && hoveredTileY >= 0) {
-    SDL_FRect rect = {(float)(hoveredTileX * TILE_SIZE),
-                      (float)(hoveredTileY * TILE_SIZE), (float)TILE_SIZE,
-                      (float)TILE_SIZE};
+    float worldX = hoveredTileX * TILE_SIZE;
+    float worldY = hoveredTileY * TILE_SIZE;
+    float screenX = worldX - cameraX;
+    float screenY = worldY - cameraY;
+
+    SDL_FRect rect = {screenX, screenY, (float)TILE_SIZE, (float)TILE_SIZE};
     SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);
     SDL_RenderRect(renderer, &rect);
   }
 }
-
 void TileGrid::renderBrushIndicator(SDL_Renderer *renderer) {
   setTileColor(renderer, currentBrush);
   SDL_FRect rect = {10, 10, 40, 40};

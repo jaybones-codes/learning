@@ -55,11 +55,19 @@ int main() {
       tg.setCurrentBrush(TileType::Grass);
 
     // Handle painting with camera offset
-    if (input.isMouseButtonDown(0)) {
+    // In main.cpp, in the painting section:
+    if (input.isMouseButtonDown(SDL_BUTTON_LEFT)) {
       int worldX = input.getMouseX() + (int)camera.getX();
       int worldY = input.getMouseY() + (int)camera.getY();
       int gridX = worldX / tg.TILE_SIZE;
       int gridY = worldY / tg.TILE_SIZE;
+
+      std::cout << "Mouse: " << input.getMouseX() << ", " << input.getMouseY()
+                << std::endl;
+      std::cout << "World: " << worldX << ", " << worldY << std::endl;
+      std::cout << "Grid: " << gridX << ", " << gridY << std::endl;
+      std::cout << "Brush: " << (int)tg.getCurrentBrush() << std::endl;
+
       tg.setTileType(gridX, gridY, tg.getCurrentBrush());
     }
 
@@ -73,7 +81,8 @@ int main() {
 
     int worldMouseX = input.getMouseX() + (int)camera.getX();
     int worldMouseY = input.getMouseY() + (int)camera.getY();
-    tg.tileHighlight(renderer, worldMouseX, worldMouseY);
+    tg.tileHighlight(renderer, worldMouseX, worldMouseY, camera.getX(),
+                     camera.getY());
 
     tg.renderBrushIndicator(renderer);
 
