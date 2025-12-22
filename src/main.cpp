@@ -1,10 +1,10 @@
 #include "Camera.h"
+#include "Entity.h"
 #include "Input.h"
 #include "TileGrid.h"
 #include "TimeManager.h"
 #include <SDL3/SDL.h>
 #include <iostream>
-
 int main() {
   if (!SDL_Init(SDL_INIT_VIDEO)) {
     std::cerr << "SDL_Init failed: " << SDL_GetError() << std::endl;

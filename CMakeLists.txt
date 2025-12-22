@@ -10,6 +10,7 @@ set(SOURCES
     src/Input.cpp
     src/TileGrid.cpp
     src/Camera.cpp
+    src/Entity.cpp
 )
 
 
