@@ -11,6 +11,7 @@ set(SOURCES
     src/TileGrid.cpp
     src/Camera.cpp
     src/Entity.cpp
+    src/ECS.cpp
 )
 
 

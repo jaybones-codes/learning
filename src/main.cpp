@@ -1,10 +1,11 @@
 #include "Camera.h"
-#include "Entity.h"
+#include "ECS.h"
 #include "Input.h"
 #include "TileGrid.h"
 #include "TimeManager.h"
 #include <SDL3/SDL.h>
 #include <iostream>
+
 int main() {
   if (!SDL_Init(SDL_INIT_VIDEO)) {
     std::cerr << "SDL_Init failed: " << SDL_GetError() << std::endl;
@@ -22,7 +23,14 @@ int main() {
     std::cerr << "Renderer creation failed: " << SDL_GetError() << std::endl;
     return 1;
   }
+  EntityManager em;
+  std::cout << em.createEntity() << " created Entity" << std::endl;
+  std::cout << em.createEntity() << " created Entity" << std::endl;
+  std::cout << em.createEntity() << " created Entity" << std::endl;
+  em.destroyEntity(2);
 
+  std::cout << em.createEntity() << " created Entity" << std::endl;
+  std::cout << em.createEntity() << " created Entity" << std::endl;
   bool isRunning = true;
   TimeManager time;
   Input input;
