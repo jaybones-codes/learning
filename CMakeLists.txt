@@ -13,6 +13,8 @@ set(SOURCES
     src/Camera.cpp
     src/Entity.cpp
     src/ECS.cpp
+    src/HerdSystem.cpp
+
 )
 
 

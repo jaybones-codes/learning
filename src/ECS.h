@@ -28,7 +28,13 @@ struct RenderComponent {
   uint8_t b;
   uint8_t a;
 };
-
+struct HerdComponent {
+  float perceptionRadius;
+  float separationWeight;
+  float alignmentWeight;
+  float cohesionWeight;
+  float maxSpeed;
+};
 class EntityManager {
 private:
   static Entity m_nextId;
@@ -47,6 +53,7 @@ private:
   std::unordered_map<Entity, PositionComponent> m_positions;
   std::unordered_map<Entity, VelocityComponent> m_velocities;
   std::unordered_map<Entity, RenderComponent> m_renders;
+  std::unordered_map<Entity, HerdComponent> m_herds;
 
 public:
   template <typename T> std::unordered_map<Entity, T> &getComponentMap();
@@ -84,6 +91,11 @@ template <>
 inline std::unordered_map<Entity, RenderComponent> &
 ComponentManager::getComponentMap<RenderComponent>() {
   return m_renders;
+}
+template <>
+inline std::unordered_map<Entity, HerdComponent> &
+ComponentManager::getComponentMap<HerdComponent>() {
+  return m_herds;
 }
 class MovementSystem {
 

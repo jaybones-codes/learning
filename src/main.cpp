@@ -1,5 +1,6 @@
 #include "Camera.h"
 #include "ECS.h"
+#include "HerdSystem.h"
 #include "Input.h"
 #include "TileGrid.h"
 #include "TimeManager.h"
@@ -40,19 +41,25 @@ int main() {
   ComponentManager cm;
   RenderSystem renderSystem;
   MovementSystem movementSystem;
+  HerdSystem herdSystem(50);
 
   Entity dog = em.createEntity();
   cm.addComponent(dog, PositionComponent{10, 10});
-  cm.addComponent(dog, VelocityComponent{1, 1});
+  cm.addComponent(dog, VelocityComponent{10, 10});
   cm.addComponent(dog, RenderComponent{10, 10, 255, 255, 255, 255});
+  cm.addComponent(dog, HerdComponent{50, 1, 1, 1, 100});
   Entity cat = em.createEntity();
   cm.addComponent(cat, PositionComponent{20, 20});
   cm.addComponent(cat, VelocityComponent{10, 10});
   cm.addComponent(cat, RenderComponent{10, 10, 0, 0, 0, 255});
+  cm.addComponent(cat, HerdComponent{50, 1, 1, 1, 100});
+
   Entity cat2 = em.createEntity();
   cm.addComponent(cat2, PositionComponent{20, 20});
-  cm.addComponent(cat2, VelocityComponent{10, 100});
+  cm.addComponent(cat2, VelocityComponent{10, 10});
   cm.addComponent(cat2, RenderComponent{25, 10, 0, 255, 0, 255});
+  cm.addComponent(cat2, HerdComponent{50, 1, 1, 1, 100});
+
   while (isRunning) {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
@@ -95,6 +102,9 @@ int main() {
     }
 
     input.update();
+    herdSystem.update(dt, cm.getComponentMap<PositionComponent>(),
+                      cm.getComponentMap<VelocityComponent>(),
+                      cm.getComponentMap<HerdComponent>());
     movementSystem.update(dt, cm.getComponentMap<PositionComponent>(),
                           cm.getComponentMap<VelocityComponent>());
     SDL_SetRenderDrawColor(renderer, 135, 206, 235, 255);
