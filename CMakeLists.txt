@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.15)
-project(proto-engine)
 
+set(CMAKE_CXX_COMPILER clang++)
 set(CMAKE_CXX_STANDARD 20)
+project(proto-engine LANGUAGES CXX)
 
 # Collect source files
 set(SOURCES

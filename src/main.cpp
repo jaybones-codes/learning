@@ -37,7 +37,22 @@ int main() {
   TileGrid tg;
   Camera camera(800, 600, tg.GRID_WIDTH * tg.TILE_SIZE,
                 tg.GRID_HEIGHT * tg.TILE_SIZE);
+  ComponentManager cm;
+  RenderSystem renderSystem;
+  MovementSystem movementSystem;
 
+  Entity dog = em.createEntity();
+  cm.addComponent(dog, PositionComponent{10, 10});
+  cm.addComponent(dog, VelocityComponent{1, 1});
+  cm.addComponent(dog, RenderComponent{10, 10, 255, 255, 255, 255});
+  Entity cat = em.createEntity();
+  cm.addComponent(cat, PositionComponent{20, 20});
+  cm.addComponent(cat, VelocityComponent{10, 10});
+  cm.addComponent(cat, RenderComponent{10, 10, 0, 0, 0, 255});
+  Entity cat2 = em.createEntity();
+  cm.addComponent(cat2, PositionComponent{20, 20});
+  cm.addComponent(cat2, VelocityComponent{10, 100});
+  cm.addComponent(cat2, RenderComponent{25, 10, 0, 255, 0, 255});
   while (isRunning) {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
@@ -80,7 +95,8 @@ int main() {
     }
 
     input.update();
-
+    movementSystem.update(dt, cm.getComponentMap<PositionComponent>(),
+                          cm.getComponentMap<VelocityComponent>());
     SDL_SetRenderDrawColor(renderer, 135, 206, 235, 255);
     SDL_RenderClear(renderer);
 
@@ -93,7 +109,9 @@ int main() {
                      camera.getY());
 
     tg.renderBrushIndicator(renderer);
-
+    renderSystem.render(renderer, camera,
+                        cm.getComponentMap<PositionComponent>(),
+                        cm.getComponentMap<RenderComponent>());
     SDL_RenderPresent(renderer);
   }
 

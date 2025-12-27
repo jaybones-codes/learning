@@ -1,8 +1,11 @@
 #pragma once
+#include "Camera.h"
+#include <SDL3/SDL.h>
 #include <cstdint>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+
 using Entity = uint32_t;
 
 struct PositionComponent {
@@ -51,6 +54,18 @@ public:
   template <typename T> void addComponent(Entity entity, T component) {
     getComponentMap<T>()[entity] = component;
   }
+
+  template <typename T> bool hasComponent(Entity entity) {
+    return getComponentMap<T>().count(entity) > 0;
+  }
+
+  template <typename T> T &getComponent(Entity entity) {
+    return getComponentMap<T>()[entity];
+  }
+
+  template <typename T> void removeComponent(Entity entity) {
+    getComponentMap<T>().erase(entity);
+  }
 };
 
 // Still in the .h file, after the class:
@@ -70,3 +85,16 @@ inline std::unordered_map<Entity, RenderComponent> &
 ComponentManager::getComponentMap<RenderComponent>() {
   return m_renders;
 }
+class MovementSystem {
+
+public:
+  void update(float deltaTime,
+              std::unordered_map<Entity, PositionComponent> &positions,
+              std::unordered_map<Entity, VelocityComponent> &velocities);
+};
+class RenderSystem {
+public:
+  void render(SDL_Renderer *renderer, Camera &camera,
+              std::unordered_map<Entity, PositionComponent> &positions,
+              std::unordered_map<Entity, RenderComponent> &renders);
+};

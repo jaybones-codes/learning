@@ -33,4 +33,32 @@ bool EntityManager::isAlive(Entity entity) {
   return m_aliveEntities.count(entity) > 0;
 }
 
-// Component Manager for handling components.
+void MovementSystem::update(
+    float deltaTime, std::unordered_map<Entity, PositionComponent> &positions,
+    std::unordered_map<Entity, VelocityComponent> &velocities) {
+
+  for (auto &[entity, velocity] : velocities) {
+    if (positions.count(entity)) {
+
+      auto &position = positions[entity];
+      position.x += velocity.vx * deltaTime;
+      position.y += velocity.vy * deltaTime;
+    }
+  }
+}
+void RenderSystem::render(
+    SDL_Renderer *renderer, Camera &camera,
+    std::unordered_map<Entity, PositionComponent> &positions,
+    std::unordered_map<Entity, RenderComponent> &renders) {
+
+  for (auto &[entity, render] : renders) {
+    if (positions.count(entity)) {
+      auto &position = positions[entity];
+      float x = position.x - camera.getX();
+      float y = position.y - camera.getY();
+      SDL_FRect rect = {x, y, render.w, render.h};
+      SDL_SetRenderDrawColor(renderer, render.r, render.g, render.b, render.a);
+      SDL_RenderFillRect(renderer, &rect);
+    }
+  }
+}
