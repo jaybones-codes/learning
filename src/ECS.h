@@ -7,7 +7,10 @@
 #include <vector>
 
 using Entity = uint32_t;
-
+struct Vec2 {
+  float x;
+  float y;
+};
 struct PositionComponent {
   float x;
   float y;
@@ -28,12 +31,27 @@ struct RenderComponent {
   uint8_t b;
   uint8_t a;
 };
-struct HerdComponent {
+struct HerdComponent { // TODO: Remove!!!!
   float perceptionRadius;
   float separationWeight;
   float alignmentWeight;
   float cohesionWeight;
   float maxSpeed;
+};
+
+struct BoidComponent {
+  // Radii
+  float separationRadius; // Personal space. (20)
+  float alignmentRadius;  // Direction matching range (50 - 80)
+  float cohesionRadius;   // Cohesion range (100 - 150)
+  // Force Multipliers
+  float separationWeight;
+  float alignmentWeight;
+  float cohesionWeight;
+  // Speed and Force
+  float maxSpeed; // this is needed to stop exponential speed increases as boids
+                  // get further away;
+  float maxForce; // clamp Force multipliers for the same potential problems
 };
 class EntityManager {
 private:
@@ -54,6 +72,7 @@ private:
   std::unordered_map<Entity, VelocityComponent> m_velocities;
   std::unordered_map<Entity, RenderComponent> m_renders;
   std::unordered_map<Entity, HerdComponent> m_herds;
+  std::unordered_map<Entity, BoidComponent> m_boids;
 
 public:
   template <typename T> std::unordered_map<Entity, T> &getComponentMap();
@@ -96,6 +115,11 @@ template <>
 inline std::unordered_map<Entity, HerdComponent> &
 ComponentManager::getComponentMap<HerdComponent>() {
   return m_herds;
+}
+template <>
+inline std::unordered_map<Entity, BoidComponent> &
+ComponentManager::getComponentMap<BoidComponent>() {
+  return m_boids;
 }
 class MovementSystem {
 

@@ -14,7 +14,7 @@ set(SOURCES
     src/Entity.cpp
     src/ECS.cpp
     src/HerdSystem.cpp
-
+src/BoidSystem.cpp
 )
 
 
