@@ -47,18 +47,18 @@ int main() {
   cm.addComponent(dog, PositionComponent{10, 10});
   cm.addComponent(dog, VelocityComponent{10, 10});
   cm.addComponent(dog, RenderComponent{10, 10, 255, 255, 255, 255});
-  cm.addComponent(dog, HerdComponent{50, 1, 1, 1, 100});
+  cm.addComponent(dog, HerdComponent{50, 50, 10, 1, 500});
   Entity cat = em.createEntity();
   cm.addComponent(cat, PositionComponent{20, 20});
   cm.addComponent(cat, VelocityComponent{10, 10});
   cm.addComponent(cat, RenderComponent{10, 10, 0, 0, 0, 255});
-  cm.addComponent(cat, HerdComponent{50, 1, 1, 1, 100});
+  cm.addComponent(cat, HerdComponent{50, 50, 10, 1, 500});
 
   Entity cat2 = em.createEntity();
   cm.addComponent(cat2, PositionComponent{20, 20});
   cm.addComponent(cat2, VelocityComponent{10, 10});
   cm.addComponent(cat2, RenderComponent{25, 10, 0, 255, 0, 255});
-  cm.addComponent(cat2, HerdComponent{50, 1, 1, 1, 100});
+  cm.addComponent(cat2, HerdComponent{50, 50, 10, 1, 500});
 
   while (isRunning) {
     SDL_Event event;

@@ -1,16 +1,21 @@
+
 #pragma once
+#include <cstddef> // for size_t
 #include <cstdint>
 #include <unordered_map>
 #include <vector>
-// forward declarations only
+
+// Forward declarations only
 struct PositionComponent;
 struct VelocityComponent;
 struct HerdComponent;
 
 using Entity = uint32_t;
 
+// ------------------- SpatialGrid -------------------
 struct SpatialGrid {
   float cellSize;
+  // cells[x][y] contains a vector of entities in that cell
   std::unordered_map<int, std::unordered_map<int, std::vector<Entity>>> cells;
 
   explicit SpatialGrid(float size);
@@ -18,6 +23,7 @@ struct SpatialGrid {
   void insert(Entity e, float x, float y);
 };
 
+// ------------------- HerdSystem -------------------
 class HerdSystem {
 public:
   explicit HerdSystem(float cellSize);
