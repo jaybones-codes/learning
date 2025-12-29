@@ -1,6 +1,6 @@
+#include "BoidSystem.h"
 #include "Camera.h"
 #include "ECS.h"
-#include "HerdSystem.h"
 #include "Input.h"
 #include "TileGrid.h"
 #include "TimeManager.h"
@@ -41,25 +41,35 @@ int main() {
   ComponentManager cm;
   RenderSystem renderSystem;
   MovementSystem movementSystem;
-  HerdSystem herdSystem(50);
+  BoidSystem boidSystem; // Adjust the cell size as neededm;
+  for (int i = 0; i < 100; i++) {
+    Entity boid = em.createEntity();
+    float inc = 20;
+    inc *= i;
 
-  Entity dog = em.createEntity();
-  cm.addComponent(dog, PositionComponent{10, 10});
-  cm.addComponent(dog, VelocityComponent{10, 10});
-  cm.addComponent(dog, RenderComponent{10, 10, 255, 255, 255, 255});
-  cm.addComponent(dog, HerdComponent{50, 50, 10, 1, 500});
-  Entity cat = em.createEntity();
-  cm.addComponent(cat, PositionComponent{20, 20});
-  cm.addComponent(cat, VelocityComponent{10, 10});
-  cm.addComponent(cat, RenderComponent{10, 10, 0, 0, 0, 255});
-  cm.addComponent(cat, HerdComponent{50, 50, 10, 1, 500});
+    // Source - https://stackoverflow.com/a
+    // Posted by John Dibling, modified by community. See post 'Timeline' for
+    // change history Retrieved 2025-12-28, License - CC BY-SA 3.0
 
-  Entity cat2 = em.createEntity();
-  cm.addComponent(cat2, PositionComponent{20, 20});
-  cm.addComponent(cat2, VelocityComponent{10, 10});
-  cm.addComponent(cat2, RenderComponent{25, 10, 0, 255, 0, 255});
-  cm.addComponent(cat2, HerdComponent{50, 50, 10, 1, 500});
-
+    float r2 =
+        static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / 100));
+    float r1 =
+        static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / 100));
+    float randomVx = (rand() % 200) - 100; // -100 to 100
+    float randomVy = (rand() % 200) - 100;
+    std::cout << "Entity Created" << std::endl;
+    cm.addComponent(boid, PositionComponent{r2, r1}); // Add Position component)
+    cm.addComponent(boid, VelocityComponent{randomVx, randomVy});
+    cm.addComponent(boid, RenderComponent{5, 6, 255, 0, 0, 255});
+    cm.addComponent(boid, BoidComponent{25.0f,    // sep Radius
+                                        30.0f,    // align radius
+                                        100.0f,   // cohesion radius
+                                        8.0f,     // sep weight
+                                        3.0f,     // align weight
+                                        0.2f,     // cohesion weight
+                                        150.0f,   // maxspeed
+                                        100.0f}); // maxforce
+  }
   while (isRunning) {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
@@ -102,9 +112,9 @@ int main() {
     }
 
     input.update();
-    herdSystem.update(dt, cm.getComponentMap<PositionComponent>(),
-                      cm.getComponentMap<VelocityComponent>(),
-                      cm.getComponentMap<HerdComponent>());
+    boidSystem.update(dt, cm.getComponentMap<BoidComponent>(),
+                      cm.getComponentMap<PositionComponent>(),
+                      cm.getComponentMap<VelocityComponent>());
     movementSystem.update(dt, cm.getComponentMap<PositionComponent>(),
                           cm.getComponentMap<VelocityComponent>());
     SDL_SetRenderDrawColor(renderer, 135, 206, 235, 255);

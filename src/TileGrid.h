@@ -14,8 +14,8 @@ class TileGrid {
 public:
   TileGrid();
   const int TILE_SIZE = 32;
-  const int GRID_WIDTH = 200;
-  const int GRID_HEIGHT = 200;
+  const int GRID_WIDTH = 10;
+  const int GRID_HEIGHT = 10;
 
   void generateGrid();
   void renderTileGrid(SDL_Renderer *renderer, float cameraX, float cameraY);
