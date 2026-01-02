@@ -6,13 +6,13 @@ struct VelocityComponent;
 struct BoidComponent;
 struct Vec2;
 using Entity = uint32_t;
-
+#include "SpatialGrid.h"
 class BoidSystem {
 private:
-  // SpatialGrid m_spatialGrid;
+  SpatialGrid m_spatialGrid;
 
 public:
-  //  BoidSystem(float worldWidth, float worldHeight, float cellSize);
+  BoidSystem(float worldWidth, float worldHeight, float cellSize);
 
   void update(float deltaTime, std::unordered_map<Entity, BoidComponent> &boids,
               std::unordered_map<Entity, PositionComponent> &positions,

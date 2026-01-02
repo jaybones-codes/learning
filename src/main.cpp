@@ -41,8 +41,8 @@ int main() {
   ComponentManager cm;
   RenderSystem renderSystem;
   MovementSystem movementSystem;
-  BoidSystem boidSystem; // Adjust the cell size as neededm;
-  for (int i = 0; i < 100; i++) {
+  BoidSystem boidSystem(800, 600, 100); // Adjust the cell size as neededm;
+  for (int i = 0; i < 200; i++) {
     Entity boid = em.createEntity();
     float inc = 20;
     inc *= i;

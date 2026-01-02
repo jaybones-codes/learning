@@ -2,11 +2,16 @@
 #include "ECS.h"
 
 #include <cmath>
+BoidSystem::BoidSystem(float worldWidth, float worldHeight, float cellSize)
+    : m_spatialGrid(worldWidth, worldHeight, cellSize) {}
 void BoidSystem::update(
     float deltaTime, std::unordered_map<Entity, BoidComponent> &boids,
     std::unordered_map<Entity, PositionComponent> &positions,
     std::unordered_map<Entity, VelocityComponent> &velocities) {
-
+  m_spatialGrid.clear();
+  for (auto &[entity, pos] : positions) {
+    m_spatialGrid.addEntity(entity, pos.x, pos.y);
+  }
   for (auto &[entity, boid] : boids) {
     if (!positions.count(entity) || !velocities.count(entity))
       continue;
@@ -66,11 +71,14 @@ Vec2 BoidSystem::calculateSeparation(
   float steerY = 0.0f;
   int count = 0;
 
-  for (auto &[otherEntity, otherBoid] : boids) {
+  auto neighours = m_spatialGrid.getNeighbors(
+      entityPosition.x, entityPosition.y, entityBoid.separationRadius);
+
+  for (Entity otherEntity : neighours) {
     if (otherEntity == entity)
       continue;
-    if (!positions.count(otherEntity))
-      continue;
+    // if (!positions.count(otherEntity))
+    // continue;
 
     auto &otherPosition = positions[otherEntity];
 
@@ -113,14 +121,11 @@ Vec2 BoidSystem::calculateAlignment(
   float steerX = 0.0f;
   float steerY = 0.0f;
   int count = 0;
-  for (auto &[otherEntity, otherBoid] : boids) {
+  auto neighours = m_spatialGrid.getNeighbors(
+      entityPosition.x, entityPosition.y, entityBoid.alignmentRadius);
+  for (Entity otherEntity : neighours) {
     if (otherEntity == entity)
       continue;
-    if (!positions.count(otherEntity))
-      continue;
-    if (!velocities.count(otherEntity))
-      continue;
-
     auto &otherPosition = positions[otherEntity];
     auto &otherVelocity = velocities[otherEntity];
 
@@ -162,12 +167,11 @@ Vec2 BoidSystem::calculateCohesion(
   Vec2 center{0.0f, 0.0f};
   int count = 0;
 
-  for (auto &[otherEntity, otherBoid] : boids) {
+  auto neighours = m_spatialGrid.getNeighbors(
+      entityPosition.x, entityPosition.y, entityBoid.alignmentRadius);
+  for (Entity otherEntity : neighours) {
     if (otherEntity == entity)
       continue;
-    if (!positions.count(otherEntity))
-      continue;
-
     auto &otherPos = positions[otherEntity];
 
     float dx = otherPos.x - entityPosition.x;
