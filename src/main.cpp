@@ -1,29 +1,19 @@
 #include "BoidSystem.h"
 #include "Camera.h"
 #include "ECS.h"
+#include "Init.h"
 #include "Input.h"
 #include "TileGrid.h"
 #include "TimeManager.h"
 #include <SDL3/SDL.h>
 #include <iostream>
 
+#include "backends/imgui_impl_sdl3.h"
+#include "backends/imgui_impl_sdlrenderer3.h"
+#include "imgui.h"
 int main() {
-  if (!SDL_Init(SDL_INIT_VIDEO)) {
-    std::cerr << "SDL_Init failed: " << SDL_GetError() << std::endl;
-    return 1;
-  }
+  EngineInit init;
 
-  SDL_Window *window = SDL_CreateWindow("Proto-Engine", 800, 600, 0);
-  if (!window) {
-    std::cerr << "Window creation failed: " << SDL_GetError() << std::endl;
-    return 1;
-  }
-
-  SDL_Renderer *renderer = SDL_CreateRenderer(window, nullptr);
-  if (!renderer) {
-    std::cerr << "Renderer creation failed: " << SDL_GetError() << std::endl;
-    return 1;
-  }
   EntityManager em;
   std::cout << em.createEntity() << " created Entity" << std::endl;
   std::cout << em.createEntity() << " created Entity" << std::endl;
@@ -44,13 +34,6 @@ int main() {
   BoidSystem boidSystem(800, 600, 100); // Adjust the cell size as neededm;
   for (int i = 0; i < 200; i++) {
     Entity boid = em.createEntity();
-    float inc = 20;
-    inc *= i;
-
-    // Source - https://stackoverflow.com/a
-    // Posted by John Dibling, modified by community. See post 'Timeline' for
-    // change history Retrieved 2025-12-28, License - CC BY-SA 3.0
-
     float r2 =
         static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / 100));
     float r1 =
@@ -73,13 +56,19 @@ int main() {
   while (isRunning) {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
+      ImGui_ImplSDL3_ProcessEvent(&event); // ADD THIS FIRST
+
+      // Then your event handling
       input.processEvent(event);
       if (event.type == SDL_EVENT_QUIT) {
         isRunning = false;
       }
     }
-
     time.updateDeltaTime();
+    // Start ImGui frame
+    ImGui_ImplSDLRenderer3_NewFrame();
+    ImGui_ImplSDL3_NewFrame();
+    ImGui::NewFrame();
     float dt = time.getDeltaTime();
 
     camera.update(dt, input);
@@ -117,26 +106,34 @@ int main() {
                       cm.getComponentMap<VelocityComponent>());
     movementSystem.update(dt, cm.getComponentMap<PositionComponent>(),
                           cm.getComponentMap<VelocityComponent>());
-    SDL_SetRenderDrawColor(renderer, 135, 206, 235, 255);
-    SDL_RenderClear(renderer);
-
-    tg.renderTileGrid(renderer, camera.getX(), camera.getY());
-    tg.renderLineGrid(renderer, camera.getX(), camera.getY());
+    SDL_SetRenderDrawColor(init.getRenderer(), 135, 206, 235, 255);
+    SDL_RenderClear(init.getRenderer());
+    ImGui::Begin("Debug");
+    ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+    ImGui::End();
+    ImGui::Render();
+    tg.renderTileGrid(init.getRenderer(), camera.getX(), camera.getY());
+    tg.renderLineGrid(init.getRenderer(), camera.getX(), camera.getY());
 
     int worldMouseX = input.getMouseX() + (int)camera.getX();
     int worldMouseY = input.getMouseY() + (int)camera.getY();
-    tg.tileHighlight(renderer, worldMouseX, worldMouseY, camera.getX(),
-                     camera.getY());
+    tg.tileHighlight(init.getRenderer(), worldMouseX, worldMouseY,
+                     camera.getX(), camera.getY());
 
-    tg.renderBrushIndicator(renderer);
-    renderSystem.render(renderer, camera,
+    tg.renderBrushIndicator(init.getRenderer());
+    renderSystem.render(init.getRenderer(), camera,
+
                         cm.getComponentMap<PositionComponent>(),
                         cm.getComponentMap<RenderComponent>());
-    SDL_RenderPresent(renderer);
+    // Render ImGui on top
+    // Render ImGui on top
+    ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(),
+                                          init.getRenderer());
+    SDL_RenderPresent(init.getRenderer());
   }
 
-  SDL_DestroyRenderer(renderer);
-  SDL_DestroyWindow(window);
+  SDL_DestroyRenderer(init.getRenderer());
+  SDL_DestroyWindow(init.getWindow());
   SDL_Quit();
 
   return 0;
