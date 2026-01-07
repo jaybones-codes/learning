@@ -2,13 +2,31 @@
 #include "ECS.h"
 
 #include <cmath>
+
+BoidSpecs specs{
+    1.0f, // cohesionWeight,
+    1.0f, // separationWeight = 1.0f,
+    1.0f, // alignmentWeight = 1.0f,
+    1.0f, // cohesionForce,
+    1.0f, // separationForce,
+    1.0f, // alignmentForce,
+    1.0f, // separationDistance,
+    1.0f, // alignmentDistance,
+    1.0f, // cohesionDistance,
+    1.0f, // maxSpeed.
+    1.0f, // maxForce
+};
+
 BoidSystem::BoidSystem(float worldWidth, float worldHeight, float cellSize)
     : m_spatialGrid(worldWidth, worldHeight, cellSize) {}
+
+//
 void BoidSystem::update(
     float deltaTime, std::unordered_map<Entity, BoidComponent> &boids,
     std::unordered_map<Entity, PositionComponent> &positions,
     std::unordered_map<Entity, VelocityComponent> &velocities) {
   m_spatialGrid.clear();
+
   for (auto &[entity, pos] : positions) {
     m_spatialGrid.addEntity(entity, pos.x, pos.y);
   }
@@ -45,13 +63,13 @@ void BoidSystem::update(
     if (pos.x < margin) {
       vel.vx += turnForce * deltaTime;
     }
-    if (pos.x > 800 - margin) { // Use your actual world width
+    if (pos.x > 1500 - margin) { // Use your actual world width
       vel.vx -= turnForce * deltaTime;
     }
     if (pos.y < margin) {
       vel.vy += turnForce * deltaTime;
     }
-    if (pos.y > 600 - margin) { // Use your actual world height
+    if (pos.y > 1500 - margin) { // Use your actual world height
       vel.vy -= turnForce * deltaTime;
     }
     // Limit velocity
@@ -168,7 +186,7 @@ Vec2 BoidSystem::calculateCohesion(
   int count = 0;
 
   auto neighours = m_spatialGrid.getNeighbors(
-      entityPosition.x, entityPosition.y, entityBoid.alignmentRadius);
+      entityPosition.x, entityPosition.y, entityBoid.cohesionRadius);
   for (Entity otherEntity : neighours) {
     if (otherEntity == entity)
       continue;

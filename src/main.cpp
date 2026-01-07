@@ -106,15 +106,23 @@ int main() {
                       cm.getComponentMap<VelocityComponent>());
     movementSystem.update(dt, cm.getComponentMap<PositionComponent>(),
                           cm.getComponentMap<VelocityComponent>());
-    SDL_SetRenderDrawColor(init.getRenderer(), 135, 206, 235, 255);
+    SDL_SetRenderDrawColor(init.getRenderer(), 255, 255, 255, 255);
     SDL_RenderClear(init.getRenderer());
-    ImGui::Begin("Debug");
+    ImGui::Begin("Debug Info");
+
     ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+    ImGui::Text("Delta Time: %.3f ms", dt * 1000.0f);
+    ImGui::Text("Entity Count: %d", (int)em.getActiveEntities().size());
+    ImGui::Text("Camera: (%.1f, %.1f)", camera.getX(), camera.getY());
+
+    ImGui::Separator(); // Visual divider
+
+    ImGui::Text("Mouse: (%d, %d)", (int)input.getMouseX(),
+                (int)input.getMouseY());
     ImGui::End();
     ImGui::Render();
     tg.renderTileGrid(init.getRenderer(), camera.getX(), camera.getY());
     tg.renderLineGrid(init.getRenderer(), camera.getX(), camera.getY());
-
     int worldMouseX = input.getMouseX() + (int)camera.getX();
     int worldMouseY = input.getMouseY() + (int)camera.getY();
     tg.tileHighlight(init.getRenderer(), worldMouseX, worldMouseY,
@@ -126,15 +134,18 @@ int main() {
                         cm.getComponentMap<PositionComponent>(),
                         cm.getComponentMap<RenderComponent>());
     // Render ImGui on top
-    // Render ImGui on top
     ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(),
                                           init.getRenderer());
     SDL_RenderPresent(init.getRenderer());
   }
-
+  ImGui_ImplSDLRenderer3_Shutdown();
+  ImGui_ImplSDL3_Shutdown();
+  ImGui::DestroyContext();
+  std::cout << "ImGui Shutdown" << std::endl;
   SDL_DestroyRenderer(init.getRenderer());
   SDL_DestroyWindow(init.getWindow());
   SDL_Quit();
+  std::cout << "SDL Shutdown" << std::endl;
 
   return 0;
 }

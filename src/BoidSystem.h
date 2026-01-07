@@ -7,6 +7,25 @@ struct BoidComponent;
 struct Vec2;
 using Entity = uint32_t;
 #include "SpatialGrid.h"
+struct BoidSpecs {
+  // Global Boid Specs
+  //
+  //  Weights
+  float cohesionWeight;
+  float separationWeight;
+  float alignmentWeight;
+  // Forces
+  float cohesionForce;
+  float separationForce;
+  float alignmentForce;
+  // Distances
+  float separationDistance;
+  float alignmentDistance;
+  float cohesionDistance;
+  // MaxSpeed
+  float maxSpeed;
+  float maxForce;
+};
 class BoidSystem {
 private:
   SpatialGrid m_spatialGrid;
