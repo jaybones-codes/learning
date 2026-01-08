@@ -1,16 +1,17 @@
 #include "BoidSystem.h"
 #include "Camera.h"
+#include "CameraTargetSystem.h"
 #include "ECS.h"
 #include "Init.h"
 #include "Input.h"
+#include "PlayerInputSystem.h"
 #include "TileGrid.h"
 #include "TimeManager.h"
-#include <SDL3/SDL.h>
-#include <iostream>
-
 #include "backends/imgui_impl_sdl3.h"
 #include "backends/imgui_impl_sdlrenderer3.h"
 #include "imgui.h"
+#include <SDL3/SDL.h>
+#include <iostream>
 int main() {
   EngineInit init;
 
@@ -28,9 +29,17 @@ int main() {
   TileGrid tg;
   Camera camera(800, 600, tg.GRID_WIDTH * tg.TILE_SIZE,
                 tg.GRID_HEIGHT * tg.TILE_SIZE);
+  PlayerInputSystem playerInputSystem;
   ComponentManager cm;
   RenderSystem renderSystem;
   MovementSystem movementSystem;
+  CameraTargetSystem targetSystem;
+  Entity player = em.createEntity();
+  cm.addComponent(player, PositionComponent{50, 50});
+  cm.addComponent(player, VelocityComponent{0, 0});
+  cm.addComponent(player, PlayerInputComponent{200.0f});
+  cm.addComponent(player, RenderComponent{32, 32, 255, 200, 0, 255});
+  cm.addComponent(player, CameraTargetComponent{});
   BoidSystem boidSystem(800, 600, 100); // Adjust the cell size as neededm;
   for (int i = 0; i < 301; i++) {
     Entity boid = em.createEntity();
@@ -63,7 +72,8 @@ int main() {
     ImGui_ImplSDL3_NewFrame();
     ImGui::NewFrame();
     float dt = time.getDeltaTime();
-
+    targetSystem.update(camera, cm.getComponentMap<PositionComponent>(),
+                        cm.getComponentMap<CameraTargetComponent>());
     camera.update(dt, input);
 
     // Handle brush switching
@@ -94,6 +104,8 @@ int main() {
     }
 
     input.update();
+    playerInputSystem.update(cm.getComponentMap<PlayerInputComponent>(),
+                             cm.getComponentMap<VelocityComponent>());
     boidSystem.update(dt, cm.getComponentMap<BoidComponent>(),
                       cm.getComponentMap<PositionComponent>(),
                       cm.getComponentMap<VelocityComponent>());

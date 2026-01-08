@@ -10,16 +10,16 @@ Camera::Camera(float viewportWidth, float viewportHeight, float worldWidth,
       m_worldHeight(worldHeight) {}
 
 void Camera::update(float deltaTime, const Input &input) {
-  if (input.isKeyDown(SDL_SCANCODE_LEFT) || input.isKeyDown(SDL_SCANCODE_A)) {
+  if (input.isKeyDown(SDL_SCANCODE_A)) {
     m_x -= m_speed * deltaTime;
   }
-  if (input.isKeyDown(SDL_SCANCODE_RIGHT) || input.isKeyDown(SDL_SCANCODE_D)) {
+  if (input.isKeyDown(SDL_SCANCODE_D)) {
     m_x += m_speed * deltaTime;
   }
-  if (input.isKeyDown(SDL_SCANCODE_UP) || input.isKeyDown(SDL_SCANCODE_W)) {
+  if (input.isKeyDown(SDL_SCANCODE_W)) {
     m_y -= m_speed * deltaTime;
   }
-  if (input.isKeyDown(SDL_SCANCODE_DOWN) || input.isKeyDown(SDL_SCANCODE_S)) {
+  if (input.isKeyDown(SDL_SCANCODE_S)) {
     m_y += m_speed * deltaTime;
   }
 

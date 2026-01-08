@@ -9,7 +9,10 @@ public:
 
   float getX() const { return m_x; }
   float getY() const { return m_y; }
-
+  void setX(float x) { m_x = x; }
+  void setY(float y) { m_y = y; }
+  float getViewportWidth() { return m_viewportWidth; };
+  float getViewportHeight() { return m_viewportHeight; };
   void update(float deltaTime, const Input &input);
   void worldToScreen(float worldX, float worldY, float &screenX,
                      float &screenY) const;

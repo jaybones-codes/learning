@@ -31,14 +31,11 @@ struct RenderComponent {
   uint8_t b;
   uint8_t a;
 };
-struct HerdComponent { // TODO: Remove!!!!
-  float perceptionRadius;
-  float separationWeight;
-  float alignmentWeight;
-  float cohesionWeight;
-  float maxSpeed;
-};
+struct PlayerInputComponent {
 
+  float speed;
+};
+struct CameraTargetComponent {};
 struct BoidComponent {
   float weightScale = 1.0f;
   float radiusScale = 1.0f;
@@ -61,8 +58,9 @@ private:
   std::unordered_map<Entity, PositionComponent> m_positions;
   std::unordered_map<Entity, VelocityComponent> m_velocities;
   std::unordered_map<Entity, RenderComponent> m_renders;
-  std::unordered_map<Entity, HerdComponent> m_herds;
+  std::unordered_map<Entity, PlayerInputComponent> m_playerInput;
   std::unordered_map<Entity, BoidComponent> m_boids;
+  std::unordered_map<Entity, CameraTargetComponent> m_cameraTargets;
 
 public:
   template <typename T> std::unordered_map<Entity, T> &getComponentMap();
@@ -84,7 +82,6 @@ public:
   }
 };
 
-// Still in the .h file, after the class:
 template <>
 inline std::unordered_map<Entity, PositionComponent> &
 ComponentManager::getComponentMap<PositionComponent>() {
@@ -102,14 +99,19 @@ ComponentManager::getComponentMap<RenderComponent>() {
   return m_renders;
 }
 template <>
-inline std::unordered_map<Entity, HerdComponent> &
-ComponentManager::getComponentMap<HerdComponent>() {
-  return m_herds;
+inline std::unordered_map<Entity, PlayerInputComponent> &
+ComponentManager::getComponentMap<PlayerInputComponent>() {
+  return m_playerInput;
 }
 template <>
 inline std::unordered_map<Entity, BoidComponent> &
 ComponentManager::getComponentMap<BoidComponent>() {
   return m_boids;
+}
+template <>
+inline std::unordered_map<Entity, CameraTargetComponent> &
+ComponentManager::getComponentMap<CameraTargetComponent>() {
+  return m_cameraTargets;
 }
 class MovementSystem {
 
