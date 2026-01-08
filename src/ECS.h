@@ -40,18 +40,8 @@ struct HerdComponent { // TODO: Remove!!!!
 };
 
 struct BoidComponent {
-  // Radii
-  float separationRadius; // Personal space. (20)
-  float alignmentRadius;  // Direction matching range (50 - 80)
-  float cohesionRadius;   // Cohesion range (100 - 150)
-  // Force Multipliers
-  float separationWeight;
-  float alignmentWeight;
-  float cohesionWeight;
-  // Speed and Force
-  float maxSpeed; // this is needed to stop exponential speed increases as boids
-                  // get further away;
-  float maxForce; // clamp Force multipliers for the same potential problems
+  float weightScale = 1.0f;
+  float radiusScale = 1.0f;
 };
 class EntityManager {
 private:

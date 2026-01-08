@@ -1,250 +1,179 @@
+
+
 #include "BoidSystem.h"
 #include "ECS.h"
-
+#include <algorithm>
 #include <cmath>
 
-BoidSpecs specs{
-    1.0f, // cohesionWeight,
-    1.0f, // separationWeight = 1.0f,
-    1.0f, // alignmentWeight = 1.0f,
-    1.0f, // cohesionForce,
-    1.0f, // separationForce,
-    1.0f, // alignmentForce,
-    1.0f, // separationDistance,
-    1.0f, // alignmentDistance,
-    1.0f, // cohesionDistance,
-    1.0f, // maxSpeed.
-    1.0f, // maxForce
-};
-
 BoidSystem::BoidSystem(float worldWidth, float worldHeight, float cellSize)
-    : m_spatialGrid(worldWidth, worldHeight, cellSize) {}
+    : m_worldWidth(worldWidth), m_worldHeight(worldHeight),
+      m_spatialGrid(worldWidth, worldHeight, cellSize) {
+  m_neighbours.reserve(128);
+  // Default boid specs
+  m_specs.cohesionWeight = 1.0f;
+  m_specs.separationWeight = 3.5f;
+  m_specs.alignmentWeight = 1.0f;
 
-//
+  m_specs.separationRadius = 40.0f;
+  m_specs.alignmentRadius = 60.0f;
+  m_specs.cohesionRadius = 80.0f;
+  m_specs.maxSpeed = 120.0f;
+  m_specs.maxForce = 200.0f;
+
+  m_specs.boundaryRadius = 100.0f;
+  m_specs.boundaryWeight = 4.0f;
+}
+
 void BoidSystem::update(
-    float deltaTime, std::unordered_map<Entity, BoidComponent> &boids,
+    float dt, std::unordered_map<Entity, BoidComponent> &boids,
     std::unordered_map<Entity, PositionComponent> &positions,
     std::unordered_map<Entity, VelocityComponent> &velocities) {
-  m_spatialGrid.clear();
 
+  m_spatialGrid.clear();
   for (auto &[entity, pos] : positions) {
     m_spatialGrid.addEntity(entity, pos.x, pos.y);
   }
+
   for (auto &[entity, boid] : boids) {
-    if (!positions.count(entity) || !velocities.count(entity))
+
+    auto posIt = positions.find(entity);
+    auto velIt = velocities.find(entity);
+    if (posIt == positions.end() || velIt == velocities.end())
       continue;
 
-    auto &pos = positions[entity];
-    auto &vel = velocities[entity];
+    PositionComponent &pos = posIt->second;
+    VelocityComponent &vel = velIt->second;
 
-    Vec2 separation =
-        calculateSeparation(entity, vel, pos, boid, positions, boids);
-    Vec2 alignment = calculateAlignment(entity, pos, vel, boid, positions,
-                                        boids, velocities);
-    Vec2 cohesion = calculateCohesion(entity, pos, vel, boid, positions, boids);
+    float sepR = m_specs.separationRadius;
+    float aliR = m_specs.alignmentRadius;
+    float cohR = m_specs.cohesionRadius;
 
-    separation.x *= boid.separationWeight;
-    separation.y *= boid.separationWeight;
-    alignment.x *= boid.alignmentWeight;
-    alignment.y *= boid.alignmentWeight;
-    cohesion.x *= boid.cohesionWeight;
-    cohesion.y *= boid.cohesionWeight;
+    float sepRSq = sepR * sepR;
+    float aliRSq = aliR * aliR;
+    float cohRSq = cohR * cohR;
 
-    Vec2 force = {separation.x + alignment.x + cohesion.x,
-                  separation.y + alignment.y + cohesion.y};
-    force = limit(force, boid.maxForce);
+    float maxR = std::max(sepR, std::max(aliR, cohR));
 
-    vel.vx += force.x * deltaTime;
-    vel.vy += force.y * deltaTime;
-    // Boundary avoidance
-    float margin = 100.0f;
-    float turnForce = 200.0f;
+    m_spatialGrid.getNeighbors(pos.x, pos.y, m_neighbours);
 
-    if (pos.x < margin) {
-      vel.vx += turnForce * deltaTime;
+    Vec2 sep{0, 0};
+    Vec2 ali{0, 0};
+    Vec2 coh{0, 0};
+
+    int sepCount = 0;
+    int aliCount = 0;
+    int cohCount = 0;
+
+    for (Entity other : m_neighbours) {
+      if (other == entity)
+        continue;
+
+      auto &otherPos = positions[other];
+      auto &otherVel = velocities[other];
+
+      float dx = otherPos.x - pos.x;
+      float dy = otherPos.y - pos.y;
+      float distSq = dx * dx + dy * dy;
+
+      if (distSq == 0.0f || distSq > maxR * maxR)
+        continue;
+
+      // --- Distance-weighted Separation ---
+      if (distSq < sepRSq) {
+        float minDistSq = 16.0f; // 4px minimum
+        float inv = 1.0f / std::max(distSq, minDistSq);
+        sep.x -= dx * inv;
+        sep.y -= dy * inv;
+        sepCount++;
+      }
+
+      // Alignment
+      if (distSq < aliRSq) {
+        ali.x += otherVel.vx;
+        ali.y += otherVel.vy;
+        aliCount++;
+      }
+
+      // Cohesion
+      if (distSq < cohRSq) {
+        coh.x += otherPos.x;
+        coh.y += otherPos.y;
+        cohCount++;
+      }
     }
-    if (pos.x > 1500 - margin) { // Use your actual world width
-      vel.vx -= turnForce * deltaTime;
+
+    Vec2 steer{0, 0};
+
+    if (sepCount > 0) {
+      normalize(sep);
+      steer.x += sep.x * m_specs.separationWeight;
+      steer.y += sep.y * m_specs.separationWeight;
     }
-    if (pos.y < margin) {
-      vel.vy += turnForce * deltaTime;
+
+    if (aliCount > 0) {
+      ali.x /= aliCount;
+      ali.y /= aliCount;
+      normalize(ali);
+      steer.x += ali.x * m_specs.alignmentWeight;
+      steer.y += ali.y * m_specs.alignmentWeight;
     }
-    if (pos.y > 1500 - margin) { // Use your actual world height
-      vel.vy -= turnForce * deltaTime;
+
+    if (cohCount > 0) {
+      coh.x /= cohCount;
+      coh.y /= cohCount;
+      coh.x -= pos.x;
+      coh.y -= pos.y;
+      normalize(coh);
+      steer.x += coh.x * m_specs.cohesionWeight;
+      steer.y += coh.y * m_specs.cohesionWeight;
     }
-    // Limit velocity
-    Vec2 velVec{vel.vx, vel.vy};
-    velVec = limit(velVec, boid.maxSpeed);
-    vel.vx = velVec.x;
-    vel.vy = velVec.y;
+
+    // --- Boundary avoidance (stronger, scaled by maxForce) ---
+    Vec2 boundary{0.0f, 0.0f};
+    float r = m_specs.boundaryRadius;
+    float turnForce = m_specs.maxForce; // scale to maxForce
+
+    if (pos.x < r)
+      boundary.x = (turnForce * (r - pos.x) / r);
+    else if (pos.x > m_worldWidth - r)
+      boundary.x = -(turnForce * (pos.x - (m_worldWidth - r)) / r);
+
+    if (pos.y < r)
+      boundary.y = (turnForce * (r - pos.y) / r);
+    else if (pos.y > m_worldHeight - r)
+      boundary.y = -(turnForce * (pos.y - (m_worldHeight - r)) / r);
+
+    steer.x += boundary.x;
+    steer.y += boundary.y;
+
+    // Then limit total force
+    steer = limit(steer, m_specs.maxForce);
+    // Apply force
+    steer = limit(steer, m_specs.maxForce);
+
+    vel.vx += steer.x * dt;
+    vel.vy += steer.y * dt;
+
+    Vec2 v{vel.vx, vel.vy};
+    v = limit(v, m_specs.maxSpeed);
+    vel.vx = v.x;
+    vel.vy = v.y;
   }
-}
-
-Vec2 BoidSystem::calculateSeparation(
-    Entity entity, VelocityComponent &entityVelocity,
-    PositionComponent &entityPosition, BoidComponent &entityBoid,
-    std::unordered_map<Entity, PositionComponent> &positions,
-    std::unordered_map<Entity, BoidComponent> &boids) {
-  float steerX = 0.0f;
-  float steerY = 0.0f;
-  int count = 0;
-
-  auto neighours = m_spatialGrid.getNeighbors(
-      entityPosition.x, entityPosition.y, entityBoid.separationRadius);
-
-  for (Entity otherEntity : neighours) {
-    if (otherEntity == entity)
-      continue;
-    // if (!positions.count(otherEntity))
-    // continue;
-
-    auto &otherPosition = positions[otherEntity];
-
-    float dx = entityPosition.x - otherPosition.x;
-    float dy = entityPosition.y - otherPosition.y;
-    float distance = std::sqrt(dx * dx + dy * dy);
-
-    if (distance > 0.0f && distance < entityBoid.separationRadius) {
-      steerX += dx / (distance * distance);
-      steerY += dy / (distance * distance);
-      count++;
-    }
-  }
-
-  if (count > 0) {
-    steerX /= count;
-    steerY /= count;
-  }
-  Vec2 steer{steerX, steerY};
-  float mag = sqrt(steerX * steerX + steerY * steerY);
-  if (mag > 0) {
-
-    normalize(steer);
-    steer.x *= entityBoid.maxSpeed;
-    steer.y *= entityBoid.maxSpeed;
-
-    steer.x -= entityVelocity.vx;
-    steer.y -= entityVelocity.vy;
-
-    steer = limit(steer, entityBoid.maxForce);
-  }
-  return steer;
-}
-Vec2 BoidSystem::calculateAlignment(
-    Entity entity, PositionComponent &entityPosition,
-    VelocityComponent &entityVelocity, BoidComponent &entityBoid,
-    std::unordered_map<Entity, PositionComponent> &positions,
-    std::unordered_map<Entity, BoidComponent> &boids,
-    std::unordered_map<Entity, VelocityComponent> &velocities) {
-  float steerX = 0.0f;
-  float steerY = 0.0f;
-  int count = 0;
-  auto neighours = m_spatialGrid.getNeighbors(
-      entityPosition.x, entityPosition.y, entityBoid.alignmentRadius);
-  for (Entity otherEntity : neighours) {
-    if (otherEntity == entity)
-      continue;
-    auto &otherPosition = positions[otherEntity];
-    auto &otherVelocity = velocities[otherEntity];
-
-    auto dx = entityPosition.x - otherPosition.x;
-    auto dy = entityPosition.y - otherPosition.y;
-    auto distance = std::sqrt(dx * dx + dy * dy);
-
-    if (distance > 0 && distance < entityBoid.alignmentRadius) {
-      steerX += otherVelocity.vx;
-      steerY += otherVelocity.vy;
-      count++;
-    }
-  }
-  if (count > 0) {
-    steerX /= count;
-    steerY /= count;
-  }
-  Vec2 steer{steerX, steerY};
-  float mag = sqrt(steerX * steerX + steerY * steerY);
-  if (mag > 0) {
-
-    normalize(steer);
-    steer.x *= entityBoid.maxSpeed;
-    steer.y *= entityBoid.maxSpeed;
-
-    steer.x -= entityVelocity.vx;
-    steer.y -= entityVelocity.vy;
-
-    steer = limit(steer, entityBoid.maxForce);
-  }
-  return steer;
-}
-
-Vec2 BoidSystem::calculateCohesion(
-    Entity entity, PositionComponent &entityPosition,
-    VelocityComponent &entityVelocity, BoidComponent &entityBoid,
-    std::unordered_map<Entity, PositionComponent> &positions,
-    std::unordered_map<Entity, BoidComponent> &boids) {
-  Vec2 center{0.0f, 0.0f};
-  int count = 0;
-
-  auto neighours = m_spatialGrid.getNeighbors(
-      entityPosition.x, entityPosition.y, entityBoid.cohesionRadius);
-  for (Entity otherEntity : neighours) {
-    if (otherEntity == entity)
-      continue;
-    auto &otherPos = positions[otherEntity];
-
-    float dx = otherPos.x - entityPosition.x;
-    float dy = otherPos.y - entityPosition.y;
-    float dist = std::sqrt(dx * dx + dy * dy);
-
-    if (dist > 0.0f && dist < entityBoid.cohesionRadius) {
-      center.x += otherPos.x;
-      center.y += otherPos.y;
-      count++;
-    }
-  }
-
-  if (count == 0)
-    return {0.0f, 0.0f};
-
-  // Average center
-  center.x /= count;
-  center.y /= count;
-
-  // Desired direction toward center
-  Vec2 steer{center.x - entityPosition.x, center.y - entityPosition.y};
-
-  // Convert to steering force
-  steer = normalize(steer);
-  steer.x *= entityBoid.maxSpeed;
-  steer.y *= entityBoid.maxSpeed;
-
-  // Steering = desired − current velocity
-  steer.x -= entityVelocity.vx;
-  steer.y -= entityVelocity.vy;
-
-  steer = limit(steer, entityBoid.maxForce);
-  return steer;
-}
-
-float getDistance(PositionComponent a, PositionComponent b) {
-
-  float dx = a.x - b.x;
-  float dy = a.y - b.y;
-  return std::sqrt(dx * dx + dy * dy);
 }
 Vec2 normalize(Vec2 vec) {
-  float magnitude = sqrt(vec.x * vec.x + vec.y * vec.y);
-  if (magnitude > 0) {
-    vec.x /= magnitude;
-    vec.y /= magnitude;
+  float mag = std::sqrt(vec.x * vec.x + vec.y * vec.y);
+  if (mag > 0.0001f) {
+    vec.x /= mag;
+    vec.y /= mag;
   }
   return vec;
 }
+
 Vec2 limit(Vec2 vec, float max) {
-  float magnitude = sqrt(vec.x * vec.x + vec.y * vec.y);
-  if (magnitude > max) {
-    vec.x = (vec.x / magnitude) * max;
-    vec.y = (vec.y / magnitude) * max;
+  float mag = std::sqrt(vec.x * vec.x + vec.y * vec.y);
+  if (mag > max) {
+    vec.x = (vec.x / mag) * max;
+    vec.y = (vec.y / mag) * max;
   }
   return vec;
 }

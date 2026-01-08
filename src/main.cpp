@@ -32,7 +32,7 @@ int main() {
   RenderSystem renderSystem;
   MovementSystem movementSystem;
   BoidSystem boidSystem(800, 600, 100); // Adjust the cell size as neededm;
-  for (int i = 0; i < 200; i++) {
+  for (int i = 0; i < 301; i++) {
     Entity boid = em.createEntity();
     float r2 =
         static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / 100));
@@ -44,14 +44,7 @@ int main() {
     cm.addComponent(boid, PositionComponent{r2, r1}); // Add Position component)
     cm.addComponent(boid, VelocityComponent{randomVx, randomVy});
     cm.addComponent(boid, RenderComponent{5, 6, 255, 0, 0, 255});
-    cm.addComponent(boid, BoidComponent{25.0f,    // sep Radius
-                                        30.0f,    // align radius
-                                        100.0f,   // cohesion radius
-                                        8.0f,     // sep weight
-                                        3.0f,     // align weight
-                                        0.2f,     // cohesion weight
-                                        150.0f,   // maxspeed
-                                        100.0f}); // maxforce
+    cm.addComponent(boid, BoidComponent{1, 1}); // maxforce
   }
   while (isRunning) {
     SDL_Event event;
@@ -120,6 +113,32 @@ int main() {
     ImGui::Text("Mouse: (%d, %d)", (int)input.getMouseX(),
                 (int)input.getMouseY());
     ImGui::End();
+    if (ImGui::Begin("Boid Parameters")) {
+
+      BoidSpecs &specs = boidSystem.getSpecs();
+
+      ImGui::SliderFloat("Cohesion Weight", &specs.cohesionWeight, 0.0f, 5.0f);
+      ImGui::SliderFloat("Separation Weight", &specs.separationWeight, 0.0f,
+                         10.0f);
+      ImGui::SliderFloat("Alignment Weight", &specs.alignmentWeight, 0.0f,
+                         5.0f);
+
+      ImGui::SliderFloat("Separation Radius", &specs.separationRadius, 0.0f,
+                         200.0f);
+      ImGui::SliderFloat("Alignment Radius", &specs.alignmentRadius, 0.0f,
+                         200.0f);
+      ImGui::SliderFloat("Cohesion Radius", &specs.cohesionRadius, 0.0f,
+                         200.0f);
+
+      ImGui::SliderFloat("Max Speed", &specs.maxSpeed, 0.0f, 500.0f);
+      ImGui::SliderFloat("Max Force", &specs.maxForce, 0.0f, 500.0f);
+
+      ImGui::SliderFloat("Boundary Radius", &specs.boundaryRadius, 0.0f,
+                         500.0f);
+      ImGui::SliderFloat("Boundary Weight", &specs.boundaryWeight, 0.0f, 20.0f);
+
+      ImGui::End();
+    }
     ImGui::Render();
     tg.renderTileGrid(init.getRenderer(), camera.getX(), camera.getY());
     tg.renderLineGrid(init.getRenderer(), camera.getX(), camera.getY());

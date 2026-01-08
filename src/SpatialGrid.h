@@ -15,5 +15,5 @@ public:
   SpatialGrid(float worldWidth, float worldHeight, float cellSize);
   void clear();
   void addEntity(Entity entity, float x, float y);
-  std::vector<Entity> getNeighbors(float x, float y, float radius);
+  void getNeighbors(float x, float y, std::vector<Entity> &out);
 };

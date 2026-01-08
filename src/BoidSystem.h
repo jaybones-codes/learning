@@ -14,52 +14,32 @@ struct BoidSpecs {
   float cohesionWeight;
   float separationWeight;
   float alignmentWeight;
-  // Forces
-  float cohesionForce;
-  float separationForce;
-  float alignmentForce;
   // Distances
-  float separationDistance;
-  float alignmentDistance;
-  float cohesionDistance;
+  float separationRadius;
+  float alignmentRadius;
+  float cohesionRadius;
   // MaxSpeed
   float maxSpeed;
   float maxForce;
+  // Boundary Behaviour
+  float boundaryRadius;
+  float boundaryWeight;
 };
 class BoidSystem {
 private:
   SpatialGrid m_spatialGrid;
+  std::vector<Entity> m_neighbours;
+  float m_worldWidth = 1000;
+  float m_worldHeight = 1000;
+  BoidSpecs m_specs;
 
 public:
   BoidSystem(float worldWidth, float worldHeight, float cellSize);
-
+  BoidSpecs &getSpecs() { return m_specs; }
   void update(float deltaTime, std::unordered_map<Entity, BoidComponent> &boids,
               std::unordered_map<Entity, PositionComponent> &positions,
               std::unordered_map<Entity, VelocityComponent> &velocities);
-
-private:
-  Vec2
-  calculateSeparation(Entity entity, VelocityComponent &entityVelocity,
-                      PositionComponent &entityPosition,
-                      BoidComponent &entityBoid,
-                      std::unordered_map<Entity, PositionComponent> &positions,
-                      std::unordered_map<Entity, BoidComponent> &boids);
-
-  Vec2
-  calculateAlignment(Entity entity, PositionComponent &entityPosition,
-                     VelocityComponent &entityVelocity,
-                     BoidComponent &entityBoid,
-                     std::unordered_map<Entity, PositionComponent> &positions,
-                     std::unordered_map<Entity, BoidComponent> &boids,
-                     std::unordered_map<Entity, VelocityComponent> &velocities);
-  Vec2
-  calculateCohesion(Entity entity, PositionComponent &entityPosition,
-                    VelocityComponent &entityVelocity,
-                    BoidComponent &entityBoid,
-                    std::unordered_map<Entity, PositionComponent> &positions,
-                    std::unordered_map<Entity, BoidComponent> &boids);
 };
 
-float getDistance(PositionComponent a, PositionComponent b);
 Vec2 limit(Vec2 vec, float max);
 Vec2 normalize(Vec2 vec);

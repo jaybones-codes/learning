@@ -2,6 +2,7 @@
 #include "SpatialGrid.h"
 #include <algorithm>
 #include <cmath>
+#include <vector>
 
 // Constructor
 SpatialGrid::SpatialGrid(float worldWidth, float worldHeight, float cellSize)
@@ -38,31 +39,28 @@ void SpatialGrid::addEntity(Entity entity, float x, float y) {
 }
 
 // Get neighboring entities (distance check handled elsewhere)
-std::vector<Entity> SpatialGrid::getNeighbors(float x, float y,
-                                              float /*radius*/) {
-  std::vector<Entity> neighbors;
+void SpatialGrid::getNeighbors(float x, float y, std::vector<Entity> &out) {
+  out.clear();
 
-  int cellX = static_cast<int>(x / m_cellSize);
-  int cellY = static_cast<int>(y / m_cellSize);
+  int cellX = int(x / m_cellSize);
+  int cellY = int(y / m_cellSize);
 
   cellX = std::clamp(cellX, 0, m_gridColumns - 1);
   cellY = std::clamp(cellY, 0, m_gridRows - 1);
 
-  for (int offsetY = -1; offsetY <= 1; ++offsetY) {
-    for (int offsetX = -1; offsetX <= 1; ++offsetX) {
-      int nx = cellX + offsetX;
-      int ny = cellY + offsetY;
+  for (int oy = -1; oy <= 1; ++oy) {
+    for (int ox = -1; ox <= 1; ++ox) {
+      int nx = cellX + ox;
+      int ny = cellY + oy;
 
       if (nx < 0 || nx >= m_gridColumns)
         continue;
       if (ny < 0 || ny >= m_gridRows)
         continue;
 
-      for (Entity other : m_grid[ny][nx]) {
-        neighbors.push_back(other);
+      for (Entity e : m_grid[ny][nx]) {
+        out.push_back(e);
       }
     }
   }
-
-  return neighbors;
 }
