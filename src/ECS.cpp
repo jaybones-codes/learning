@@ -22,6 +22,7 @@ Entity EntityManager::createEntity() {
 }
 void EntityManager::destroyEntity(Entity entity) {
   m_entityPool.push_back(entity);
+  m_deadEntities.push_back(entity);
   m_aliveEntities.erase(entity);
   std::cout << entity << "  was killed" << std::endl;
 }

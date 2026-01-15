@@ -11,9 +11,12 @@
 #include "backends/imgui_impl_sdlrenderer3.h"
 #include "imgui.h"
 #include <SDL3/SDL.h>
+#include <Simulation.h>
 #include <iostream>
+
 int main() {
   EngineInit init;
+  Simulation sim;
 
   EntityManager em;
   std::cout << em.createEntity() << " created Entity" << std::endl;
@@ -168,6 +171,7 @@ int main() {
     ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(),
                                           init.getRenderer());
     SDL_RenderPresent(init.getRenderer());
+    sim.cleanupDeadEntities(em, cm);
   }
   ImGui_ImplSDLRenderer3_Shutdown();
   ImGui_ImplSDL3_Shutdown();

@@ -6,10 +6,11 @@ project(proto-engine LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# ---- SDL3 ----
-find_package(SDL3 REQUIRED)
+# ---------------- SDL3 (pkg-config, NOT find_package) ----------------
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(SDL3 REQUIRED sdl3)
 
-# ---- ImGui ----
+# ---------------- ImGui ----------------
 set(IMGUI_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external/imgui)
 
 set(IMGUI_SOURCES
@@ -21,7 +22,7 @@ set(IMGUI_SOURCES
     ${IMGUI_DIR}/backends/imgui_impl_sdlrenderer3.cpp
 )
 
-# ---- Your sources (ALL in src/) ----
+# ---------------- Engine sources ----------------
 file(GLOB_RECURSE ENGINE_SOURCES
     src/*.cpp
 )
@@ -31,15 +32,21 @@ add_executable(proto-engine
     ${IMGUI_SOURCES}
 )
 
-# ---- Include paths ----
+# ---------------- Includes ----------------
 target_include_directories(proto-engine PRIVATE
     src
     ${IMGUI_DIR}
     ${IMGUI_DIR}/backends
+    ${SDL3_INCLUDE_DIRS}
 )
 
-# ---- Link ----
+# ---------------- Link ----------------
 target_link_libraries(proto-engine PRIVATE
-    SDL3::SDL3
+    ${SDL3_LIBRARIES}
+)
+
+# ---------------- Compile flags from pkg-config ----------------
+target_compile_options(proto-engine PRIVATE
+    ${SDL3_CFLAGS_OTHER}
 )
 

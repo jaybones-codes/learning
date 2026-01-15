@@ -45,12 +45,15 @@ private:
   static Entity m_nextId;
   std::unordered_set<Entity> m_aliveEntities;
   std::vector<Entity> m_entityPool;
+  std::vector<Entity> m_deadEntities;
 
 public:
   Entity createEntity();
   void destroyEntity(Entity entity);
   bool isAlive(Entity entity);
   std::unordered_set<Entity> &getActiveEntities();
+  void clearDeadEntities() { m_deadEntities.clear(); }
+  const std::vector<Entity> &getDeadEntities() { return m_deadEntities; }
 };
 
 class ComponentManager {
@@ -63,6 +66,16 @@ private:
   std::unordered_map<Entity, CameraTargetComponent> m_cameraTargets;
 
 public:
+  void removeAllComponents(Entity e) {
+    removeComponent<PositionComponent>(e);
+    removeComponent<VelocityComponent>(e);
+    removeComponent<RenderComponent>(e);
+    removeComponent<PlayerInputComponent>(e);
+    removeComponent<BoidComponent>(e);
+
+    removeComponent<CameraTargetComponent>(e);
+  }
+
   template <typename T> std::unordered_map<Entity, T> &getComponentMap();
 
   template <typename T> void addComponent(Entity entity, T component) {
