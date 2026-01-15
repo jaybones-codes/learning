@@ -30,7 +30,7 @@ int main() {
   TimeManager time;
   Input input;
   TileGrid tg;
-  Camera camera(800, 600, tg.GRID_WIDTH * tg.TILE_SIZE,
+  Camera camera(sim.SCREENWIDTH, sim.SCREENHEIGHT, tg.GRID_WIDTH * tg.TILE_SIZE,
                 tg.GRID_HEIGHT * tg.TILE_SIZE);
   PlayerInputSystem playerInputSystem;
   ComponentManager cm;
@@ -58,6 +58,8 @@ int main() {
     cm.addComponent(boid, RenderComponent{5, 6, 255, 0, 0, 255});
     cm.addComponent(boid, BoidComponent{1, 1}); // maxforce
   }
+  int i = 300;
+
   while (isRunning) {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
@@ -105,7 +107,11 @@ int main() {
 
       tg.setTileType(gridX, gridY, tg.getCurrentBrush());
     }
-
+    if (i > 0) {
+      em.destroyEntity(i);
+      i--;
+      std::cout << "Entity " << i << " Destroyed" << std::endl;
+    }
     input.update();
     playerInputSystem.update(cm.getComponentMap<PlayerInputComponent>(),
                              cm.getComponentMap<VelocityComponent>());
@@ -122,7 +128,7 @@ int main() {
     ImGui::Text("Delta Time: %.3f ms", dt * 1000.0f);
     ImGui::Text("Entity Count: %d", (int)em.getActiveEntities().size());
     ImGui::Text("Camera: (%.1f, %.1f)", camera.getX(), camera.getY());
-
+    ImGui::Text("Dead Entities: %d", (int)em.getPool().size());
     ImGui::Separator(); // Visual divider
 
     ImGui::Text("Mouse: (%d, %d)", (int)input.getMouseX(),

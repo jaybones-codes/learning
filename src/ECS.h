@@ -54,6 +54,7 @@ public:
   std::unordered_set<Entity> &getActiveEntities();
   void clearDeadEntities() { m_deadEntities.clear(); }
   const std::vector<Entity> &getDeadEntities() { return m_deadEntities; }
+  std::vector<Entity> &getPool() { return m_entityPool; }
 };
 
 class ComponentManager {

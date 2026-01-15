@@ -4,6 +4,7 @@ void Simulation::cleanupDeadEntities(EntityManager &em, ComponentManager &cm) {
 
     for (auto e : em.getDeadEntities()) {
       cm.removeAllComponents(e);
+      em.getActiveEntities().erase(e);
     }
     em.clearDeadEntities();
   }

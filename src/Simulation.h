@@ -7,6 +7,9 @@ public:
   ~Simulation() {}
 
   void cleanupDeadEntities(EntityManager &em, ComponentManager &cm);
+  // Globals
+  int SCREENWIDTH = 800;
+  int SCREENHEIGHT = 600;
 
 private:
 };
