@@ -16,7 +16,7 @@ public:
   const int TILE_SIZE = 32;
   const int GRID_WIDTH = 50;
   const int GRID_HEIGHT = 50;
-
+  bool isWalkable(int x, int y);
   void generateGrid();
   void renderTileGrid(SDL_Renderer *renderer, float cameraX, float cameraY);
   void renderLineGrid(SDL_Renderer *renderer, float cameraX, float cameraY);

@@ -31,11 +31,19 @@ struct RenderComponent {
   uint8_t b;
   uint8_t a;
 };
+
 struct PlayerInputComponent {
 
   float speed;
 };
+
+struct CollisionComponent {
+  float w;
+  float h;
+};
+
 struct CameraTargetComponent {};
+
 struct BoidComponent {
   float weightScale = 1.0f;
   float radiusScale = 1.0f;
@@ -65,6 +73,7 @@ private:
   std::unordered_map<Entity, PlayerInputComponent> m_playerInput;
   std::unordered_map<Entity, BoidComponent> m_boids;
   std::unordered_map<Entity, CameraTargetComponent> m_cameraTargets;
+  std::unordered_map<Entity, CollisionComponent> m_collisions;
 
 public:
   void removeAllComponents(Entity e) {
@@ -126,6 +135,11 @@ template <>
 inline std::unordered_map<Entity, CameraTargetComponent> &
 ComponentManager::getComponentMap<CameraTargetComponent>() {
   return m_cameraTargets;
+}
+template <>
+inline std::unordered_map<Entity, CollisionComponent> &
+ComponentManager::getComponentMap<CollisionComponent>() {
+  return m_collisions;
 }
 class MovementSystem {
 

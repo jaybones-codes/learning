@@ -5,6 +5,7 @@
 #include "Init.h"
 #include "Input.h"
 #include "PlayerInputSystem.h"
+#include "Systems.h"
 #include "TileGrid.h"
 #include "TimeManager.h"
 #include "backends/imgui_impl_sdl3.h"
@@ -13,19 +14,11 @@
 #include <SDL3/SDL.h>
 #include <Simulation.h>
 #include <iostream>
-
 int main() {
   EngineInit init;
   Simulation sim;
 
   EntityManager em;
-  std::cout << em.createEntity() << " created Entity" << std::endl;
-  std::cout << em.createEntity() << " created Entity" << std::endl;
-  std::cout << em.createEntity() << " created Entity" << std::endl;
-  em.destroyEntity(2);
-
-  std::cout << em.createEntity() << " created Entity" << std::endl;
-  std::cout << em.createEntity() << " created Entity" << std::endl;
   bool isRunning = true;
   TimeManager time;
   Input input;
@@ -37,14 +30,16 @@ int main() {
   RenderSystem renderSystem;
   MovementSystem movementSystem;
   CameraTargetSystem targetSystem;
+  CollisionSystem collisionSystem;
   Entity player = em.createEntity();
   cm.addComponent(player, PositionComponent{50, 50});
   cm.addComponent(player, VelocityComponent{0, 0});
   cm.addComponent(player, PlayerInputComponent{200.0f});
   cm.addComponent(player, RenderComponent{32, 32, 255, 200, 0, 255});
   cm.addComponent(player, CameraTargetComponent{});
+  cm.addComponent(player, CollisionComponent{64, 64});
   BoidSystem boidSystem(800, 600, 100); // Adjust the cell size as neededm;
-  for (int i = 0; i < 301; i++) {
+  for (int i = 0; i < 20; i++) {
     Entity boid = em.createEntity();
     float r2 =
         static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / 100));
@@ -57,8 +52,9 @@ int main() {
     cm.addComponent(boid, VelocityComponent{randomVx, randomVy});
     cm.addComponent(boid, RenderComponent{5, 6, 255, 0, 0, 255});
     cm.addComponent(boid, BoidComponent{1, 1}); // maxforce
+    cm.addComponent(boid, CollisionComponent{5, 6});
   }
-  int i = 300;
+  int i = (int)em.getActiveEntities().size();
 
   while (isRunning) {
     SDL_Event event;
@@ -67,7 +63,8 @@ int main() {
 
       // Then your event handling
       input.processEvent(event);
-      if (event.type == SDL_EVENT_QUIT) {
+      if (event.type == SDL_EVENT_QUIT ||
+          input.isKeyDown(SDL_SCANCODE_ESCAPE)) {
         isRunning = false;
       }
     }
@@ -107,11 +104,7 @@ int main() {
 
       tg.setTileType(gridX, gridY, tg.getCurrentBrush());
     }
-    if (i > 0) {
-      em.destroyEntity(i);
-      i--;
-      std::cout << "Entity " << i << " Destroyed" << std::endl;
-    }
+
     input.update();
     playerInputSystem.update(cm.getComponentMap<PlayerInputComponent>(),
                              cm.getComponentMap<VelocityComponent>());
@@ -120,6 +113,10 @@ int main() {
                       cm.getComponentMap<VelocityComponent>());
     movementSystem.update(dt, cm.getComponentMap<PositionComponent>(),
                           cm.getComponentMap<VelocityComponent>());
+
+    collisionSystem.update(tg, cm.getComponentMap<PositionComponent>(),
+                           cm.getComponentMap<CollisionComponent>(),
+                           cm.getComponentMap<VelocityComponent>());
     SDL_SetRenderDrawColor(init.getRenderer(), 255, 255, 255, 255);
     SDL_RenderClear(init.getRenderer());
     ImGui::Begin("Debug Info");

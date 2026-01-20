@@ -7,7 +7,14 @@ void TileGrid::generateGrid() {
   m_grid = std::vector<std::vector<TileType>>(
       GRID_HEIGHT, std::vector<TileType>(GRID_WIDTH, TileType::Floor));
 }
-
+bool TileGrid::isWalkable(int x, int y) {
+  TileType type = getTileType(x, y);
+  if (type == TileType::Wall || type == TileType::Water) {
+    return false;
+  } else {
+    return true;
+  }
+}
 bool TileGrid::checkBounds(int x, int y) {
   return x >= 0 && x < GRID_WIDTH && y >= 0 && y < GRID_HEIGHT;
 }
